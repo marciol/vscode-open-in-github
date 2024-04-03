@@ -5,6 +5,9 @@ const path = require("path");
 const open = require("open");
 const R = require("ramda");
 const clipboardy = require("clipboardy");
+const spawn = require("child_process").spawn;
+
+const isWayland = process.env.XDG_SESSION_TYPE === 'wayland';
 
 export const BRANCH_URL_SEP = " — ";
 
@@ -548,7 +551,11 @@ export async function openQuickPickItem(item?: QuickPickItem) {
 export function copyQuickPickItem(item?: QuickPickItem) {
   if (!item) return;
   const url = (item as any).url;
-  clipboardy.writeSync(url);
+  if (isWayland) {
+    spawn('wl-copy', [url], { stdio: 'ignore' }).on('error', () => {});
+  } else {
+    clipboardy.writeSync(url);
+  }
   window.showInformationMessage("Copied to the clipboard: " + url);
 }
 
